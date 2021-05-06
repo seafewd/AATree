@@ -49,9 +49,10 @@ get a (Node _ left y right) = case compare a y of
 insert :: Ord a => a -> AATree a -> AATree a
 insert x (Node n l v r)
   | x < v = fixup (Node n (insert x l) v r)
-  | x > v = fixup (Node n l v (insert x r))
+  | x >= v = fixup (Node n l v (insert x r))
   where fixup = split . skew
 insert x Empty = Node 0 Empty x Empty
+
 
 -- helper for insert
 -- right rotation
@@ -120,13 +121,13 @@ checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc 
   where
     leftChildOK = levellc == (level + 1)
     rightChildOK = (levelrc == level) || (levelrc == (level + 1))
-    rightGrandchildOK = level > levelrgc
-checkLevels (Leaf _ a) = True
+    rightGrandchildOK = level >= levelrgc
+checkLevels (Leaf _ _) = True
 checkLevels Empty = True
 checkLevels (Node _ Empty _ Empty) = True
-checkLevels _ = True
+checkLevels _ = False
 
-
+-- check if tree is empty
 isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
 
@@ -140,26 +141,5 @@ leftSub (Node _ left _ _) = left
 -- get right subtree
 rightSub :: AATree a -> AATree a
 rightSub (Node _ _ _ right) = right
-
-
--- show tree
--- shamelessly stolen thank you internet
-showTree :: Show a => AATree a -> String
-showTree Empty = "Empty root."
-showTree (Node level left value right) =
-  unlines (ppHelper (Node level left value right))
-    where
-      pad :: String -> String -> [String] -> [String]
-      pad first rest =
-        zipWith (++) (first : repeat rest)
-
-      ppSubtree :: Show a => AATree a -> AATree a -> [String]
-      ppSubtree left right =
-        pad "+- " "|  " (ppHelper left) ++ pad "`- " "   " (ppHelper right)
-
-      ppHelper :: Show a => AATree a -> [String]
-      ppHelper Empty = []
-      ppHelper (Node level left value right) =
-        (show value) : ppSubtree left right
 
 --------------------------------------------------------------------------------
