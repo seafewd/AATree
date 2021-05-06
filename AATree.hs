@@ -19,24 +19,24 @@ module AATree (
 -- AA search trees
 
 data AATree a
-  = Empty { level :: Int }
+  = Empty
   | Node  { level :: Int, left :: AATree a, value :: a, right :: AATree a }
   | Leaf  { level :: Int, value :: a }
   deriving (Eq, Show, Read)
 
 -- test trees
 --at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
-at = Node 0 (Node 1 (Leaf 2 1) 2 (Empty 1)) 3 (Leaf 0 4)
+at = Node 0 (Node 1 (Leaf 2 1) 2 Empty) 3 (Leaf 0 4)
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
 --leaf = Leaf 1
 
 -- return an empty tree
 emptyTree :: AATree a
-emptyTree = (Empty 0)
+emptyTree = Empty
 
 -- find an element in the tree
 get :: Ord a => a -> AATree a -> Maybe a
-get _ (Empty _) = Nothing
+get _ Empty = Nothing
 get a (Leaf _ x)
   | a == x = Just x
   | otherwise = Nothing
@@ -46,12 +46,12 @@ get a (Node _ left y right) = case compare a y of
   GT -> get a right
 
 -- insert an element
-insert :: Ord a => AATree a -> a -> AATree a
-insert (Node n l v r) x
-  | x < v = fixup (Node n (insert l x) v r)
-  | x > v = fixup (Node n l v (insert r x))
+insert :: Ord a => a -> AATree a -> AATree a
+insert x (Node n l v r)
+  | x < v = fixup (Node n (insert x l) v r)
+  | x > v = fixup (Node n l v (insert x r))
   where fixup = split . skew
-insert (Empty _) x = Node 1 (Empty 1) x (Empty 0)
+insert x Empty = Node 0 Empty x Empty
 
 -- helper for insert
 -- right rotation
@@ -62,18 +62,18 @@ skew t = t
 
 split :: AATree a -> AATree a
 split (Node tn a tv (Node rn b rv x@(Node xn _ _ _)))
-  | tn == xn = Node (rn+1) (Node tn a tv b) rv x
+  | tn == xn = Node (rn + 1) (Node tn a tv b) rv x
 split t = t
 
 -- inorder traversal
 inorder :: AATree a -> [a]
 inorder (Leaf _ a) = [a]
-inorder (Empty _) = []
+inorder Empty = []
 inorder (Node _ left a right) = inorder left ++ [a] ++ inorder right
 
 -- get size of tree (# nodes != Empty)
 size :: AATree a -> Int
-size (Empty _) = 0
+size Empty = 0
 size (Leaf _ _) = 1
 size (Node _ left _ right) = 1 + (size left) + (size right)
 
@@ -81,7 +81,7 @@ size (Node _ left _ right) = 1 + (size left) + (size right)
 height :: AATree a -> Int
 height (Node _ left _ right) = 1 + max (height left) (height right)
 height (Leaf _ _) = 1
-height (Empty _) = 0
+height Empty = 0
 
 --------------------------------------------------------------------------------
 -- Optional function
@@ -116,7 +116,16 @@ isSorted xs = and $ zipWith (<=) xs (tail xs)
 --     rightGrandchildOK node
 -- where each conjunct checks one aspect of the invariant
 checkLevels :: AATree a -> Bool
-checkLevels = error "checkLevels not implemented"
+checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) = leftChildOK && rightChildOK && rightGrandchildOK
+  where
+    leftChildOK = levellc == (level + 1)
+    rightChildOK = (levelrc == level) || (levelrc == (level + 1))
+    rightGrandchildOK = level > levelrgc
+checkLevels (Leaf _ a) = True
+checkLevels Empty = True
+checkLevels (Node _ Empty _ Empty) = True
+checkLevels _ = True
+
 
 isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
@@ -136,7 +145,7 @@ rightSub (Node _ _ _ right) = right
 -- show tree
 -- shamelessly stolen thank you internet
 showTree :: Show a => AATree a -> String
-showTree (Empty _) = "Empty root."
+showTree Empty = "Empty root."
 showTree (Node level left value right) =
   unlines (ppHelper (Node level left value right))
     where
@@ -149,7 +158,7 @@ showTree (Node level left value right) =
         pad "+- " "|  " (ppHelper left) ++ pad "`- " "   " (ppHelper right)
 
       ppHelper :: Show a => AATree a -> [String]
-      ppHelper (Empty _) = []
+      ppHelper Empty = []
       ppHelper (Node level left value right) =
         (show value) : ppSubtree left right
 
