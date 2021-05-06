@@ -17,7 +17,7 @@ main = do
   -- split the data into words
   let list = words contents
   -- build an AA tree using the list
-  let fullTree = buildTree list
+  let fullTree = buildTree list Empty
   -- calculate and print statistics
   let treeSize = size fullTree
   let treeHeight = height fullTree
@@ -29,7 +29,7 @@ main = do
   -- use fromIntegral/ceiling/logBase
 
 
-buildTree :: [a] -> AATree a
+buildTree :: [a] -> AATree a -> AATree a
 buildTree [] tree = tree
 buildTree (x:xs) tree = foldl insert (head xs) tree
 
