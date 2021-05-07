@@ -25,9 +25,9 @@ data AATree a
 
 -- test trees
 --at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
-at1 = Node 1 (Node 2 (Node 3 Empty 1 Empty) 2 Empty) 3 (Node 2 Empty 4 Empty)
-at2 = Node 1 (Node 2 Empty 1 Empty) 2 (Node 2 Empty 3 Empty)
-at3 = Node 1 Empty 1 Empty
+--at1 = Node 1 (Node 2 (Node 3 Empty 1 Empty) 2 Empty) 3 (Node 2 Empty 4 Empty)
+--at2 = Node 1 (Node 2 Empty 1 Empty) 2 (Node 2 Empty 3 Empty)
+--at3 = Node 1 Empty 1 Empty
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
 --leaf = Leaf 1
 
@@ -40,10 +40,10 @@ emptyTree = Empty
 -- find an element in the tree
 get :: Ord a => a -> AATree a -> Maybe a
 get _ Empty = Nothing
-get a (Node _ left y right) = case compare a y of
-  LT -> get a left
+get a (Node _ l y r) = case compare a y of
+  LT -> get a l
   EQ -> Just a
-  GT -> get a right
+  GT -> get a r
 
 
 -- insert an element
@@ -56,6 +56,7 @@ insert x (Node level left y right)
   | otherwise = balance $ Node level left y (insert x right)
   where balance = split . skew
 -}
+insert :: Ord a => a -> AATree a -> AATree a
 insert x Empty = Node 1 Empty x Empty
 insert x (Node lv l y r) = case compare x y of
    LT -> Node lv (insert x l) y r .$ skew .$ split
@@ -67,7 +68,7 @@ insert x (Node lv l y r) = case compare x y of
 
 -- | right rotation
 skew :: AATree a -> AATree a
-skew t@(Node lvT l@(Node lvL a _ b) _ r)
+skew t@(Node lvT l@(Node lvL _ _ _) _ _)
   | lvT == lvL = let t' = t {left = right l}
                      l' = l {right = t'}
                  in l'
@@ -77,7 +78,7 @@ skew t = t
 
 -- | left rotation and level increase
 split :: AATree a -> AATree a
-split t@(Node lvT a _ r@(Node lvR b _ x@(Node lvX _ _ _)))
+split t@(Node lvT _ _ r@(Node lvR _ _ (Node lvX _ _ _)))
   | lvT == lvX = let t' = t {right = left r}
                      r' = r {left = t', level = lvR + 1}
                  in r'
@@ -98,39 +99,42 @@ split tree@(Node level _ _ (Node _ _ _ (Node v _ _ _)))
   | v == level = Node (level + 1) left x right
     where (Node _ left x right) = leftRotate tree
 split tree = tree
--}
+
 
 -- left rotation
 leftRotate :: AATree a -> AATree a
-leftRotate (Node level a p (Node _ b q c)) = Node level (Node level a p b) q c
+leftRotate (Node level1 a p (Node _ b q c)) = Node level1 (Node level1 a p b) q c
 leftRotate Empty = emptyTree
 
 
 -- right rotation
 rightRotate :: AATree a -> AATree a
-rightRotate (Node level (Node _ a p b) q c) = Node level a p (Node level b q c)
+rightRotate (Node level1 (Node _ a p b) q c) = Node level1 a p (Node level1 b q c)
 rightRotate Empty = emptyTree
+rightRotate (Node _ Empty _ Empty) = emptyTree
+
 
 -- increment level of a tree
 incLevel :: AATree a -> AATree a
-incLevel (Node level left value right) = Node (level + 1) left value right
-
+incLevel (Node level1 l val r) = Node (level1 + 1) l val r
+incLevel Empty = emptyTree
+-}
 
 -- inorder traversal
 inorder :: AATree a -> [a]
 inorder Empty = []
-inorder (Node _ left a right) = inorder left ++ [a] ++ inorder right
+inorder (Node _ l a r) = inorder l ++ [a] ++ inorder r
 
 
 -- get size of tree (# nodes != Empty)
 size :: AATree a -> Int
 size Empty = 0
-size (Node _ left _ right) = 1 + (size left) + (size right)
+size (Node _ l _ r) = 1 + (size l) + (size r)
 
 
 -- get height of tree recursively
 height :: AATree a -> Int
-height (Node _ left _ right) = 1 + max (height left) (height right)
+height (Node _ l _ r) = 1 + max (height l) (height r)
 height Empty = 0
 
 --------------------------------------------------------------------------------
@@ -168,14 +172,14 @@ isSorted xs = and $ zipWith (<=) xs (tail xs)
 --     rightGrandchildOK node
 -- where each conjunct checks one aspect of the invariant
 checkLevels :: AATree a -> Bool
-checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) =
+checkLevels (Node level1 (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) =
   leftChildOK &&
   rightChildOK &&
   rightGrandchildOK
   where
-    leftChildOK = levellc == (level + 1)
-    rightChildOK = (levelrc == level) || (levelrc == (level + 1))
-    rightGrandchildOK = level > levelrgc
+    leftChildOK = levellc == (level1 + 1)
+    rightChildOK = (levelrc == level1) || (levelrc == (level1 + 1))
+    rightGrandchildOK = level1 > levelrgc
 checkLevels _ = True
 {-
 checkLevels (Node _ Empty _ Empty) = True
