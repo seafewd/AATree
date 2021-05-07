@@ -22,7 +22,7 @@ main = do
   let treeSize = size fullTree
   let treeHeight = height fullTree
   let optimalHeight = ((ceiling . logBase 2.0 . fromIntegral) (treeSize + 1)) - 1
-  let ratio = treeHeight `div` optimalHeight
+  let ratio = (fromIntegral treeHeight) / (fromIntegral optimalHeight)
   let checkTreeStatus = checkTree fullTree
 
 
@@ -42,6 +42,6 @@ buildTree (x:xs) = insert x (buildTree xs)
 
 {- ???????????????
 buildTree' :: Ord a => [a] -> AATree a
-buildTree' list = foldl insert emptyTree list
+buildTree' list = foldl insert list emptyTree
 -}
 --------------------------------------------------------------------------------

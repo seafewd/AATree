@@ -45,19 +45,48 @@ get a (Node _ left y right) = case compare a y of
 
 
 -- insert an element
--- auto balance with skew/split
+-- auto balance with skew + split at every node
+{-
 insert :: Ord a => a -> AATree a -> AATree a
-insert x Empty = Node 0 Empty x Empty
+insert x Empty = Node 1 Empty x Empty
 insert x (Node level left y right)
-  | x < y     = balance $ Node level (incLevel (insert x left)) y right
+  | x < y     = balance $ Node level (insert x left) y right
   | otherwise = balance $ Node level left y (insert x right)
   where balance = split . skew
+-}
+insert x Empty = Node 1 Empty x Empty
+insert x (Node lv l y r) = case compare x y of
+   LT -> Node lv (insert x l) y r .$ skew .$ split
+   GT -> Node lv l y (insert x r) .$ skew .$ split
+   EQ -> Node lv l x r
 
+(.$) :: a -> (a -> b) -> b
+(.$) = flip ($)
 
+-- | right rotation
+skew :: AATree a -> AATree a
+skew t@(Node lvT l@(Node lvL a _ b) _ r)
+  | lvT == lvL = let t' = t {left = right l}
+                     l' = l {right = t'}
+                 in l'
+
+  | otherwise = t
+skew t = t
+
+-- | left rotation and level increase
+split :: AATree a -> AATree a
+split t@(Node lvT a _ r@(Node lvR b _ x@(Node lvX _ _ _)))
+  | lvT == lvX = let t' = t {right = left r}
+                     r' = r {left = t', level = lvR + 1}
+                 in r'
+  | otherwise = t
+split t = t
+
+{-
 -- skew
 skew :: AATree a -> AATree a
-skew tree@(Node level _ _ (Node v _ _ _))
-  | v == level = rightRotate tree
+skew tree@(Node l1 (Node l2 _ _ _) _ _)
+  | l2 == l1 = rightRotate tree
 skew tree = tree
 
 
@@ -67,11 +96,11 @@ split tree@(Node level _ _ (Node _ _ _ (Node v _ _ _)))
   | v == level = Node (level + 1) left x right
     where (Node _ left x right) = leftRotate tree
 split tree = tree
-
+-}
 
 -- left rotation
 leftRotate :: AATree a -> AATree a
-leftRotate (Node level a p (Node _ b q c)) = Node level (Node level a p b ) q c
+leftRotate (Node level a p (Node _ b q c)) = Node level (Node level a p b) q c
 leftRotate Empty = emptyTree
 
 
@@ -137,14 +166,15 @@ isSorted xs = and $ zipWith (<=) xs (tail xs)
 --     rightGrandchildOK node
 -- where each conjunct checks one aspect of the invariant
 checkLevels :: AATree a -> Bool
-checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) = leftChildOK && rightChildOK && rightGrandchildOK
+checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) =
+  leftChildOK &&
+  rightChildOK &&
+  rightGrandchildOK
   where
     leftChildOK = levellc == (level + 1)
     rightChildOK = (levelrc == level) || (levelrc == (level + 1))
-    rightGrandchildOK = level >= levelrgc
-checkLevels Empty = True
-checkLevels (Node _ Empty _ Empty) = True
-checkLevels _ = False
+    rightGrandchildOK = level > levelrgc
+
 
 
 -- check if tree is empty
@@ -157,10 +187,10 @@ isEmpty a = size a == 0
 --
 -- get left subtree
 leftSub :: AATree a -> AATree a
-leftSub (Node _ left _ _) = left
+leftSub = left
 
 -- get right subtree
 rightSub :: AATree a -> AATree a
-rightSub (Node _ _ _ right) = right
+rightSub = right
 
 --------------------------------------------------------------------------------
