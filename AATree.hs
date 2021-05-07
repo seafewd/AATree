@@ -30,9 +30,11 @@ at = Node 0 (Node 1 (Leaf 2 1) 2 Empty) 3 (Leaf 0 4)
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
 --leaf = Leaf 1
 
+
 -- return an empty tree
 emptyTree :: AATree a
 emptyTree = Empty
+
 
 -- find an element in the tree
 get :: Ord a => a -> AATree a -> Maybe a
@@ -45,26 +47,45 @@ get a (Node _ left y right) = case compare a y of
   EQ -> Just a
   GT -> get a right
 
+
 -- insert an element
+-- auto balance with skew/split
 insert :: Ord a => a -> AATree a -> AATree a
-insert x (Node n l v r)
-  | x < v = fixup (Node n (insert x l) v r)
-  | x >= v = fixup (Node n l v (insert x r))
-  where fixup = split . skew
-insert x Empty = Node 0 Empty x Empty
+insert x Empty = Node 1 Empty x Empty
+insert x (Node level left y right)
+  | x < y     = balance $ Node level (insert x left) y right
+  | otherwise = balance $ Node level left y (insert x right)
+  where balance = split . skew
 
 
--- helper for insert
--- right rotation
+-- skew
 skew :: AATree a -> AATree a
-skew (Node n (Node ln ll lv lr) v r)
-  | ln == n = Node ln ll lv (Node n lr v r)
-skew t = t
+skew tree@(Node level _ _ (Node v _ _ _))
+  | v == level = rightRotate tree
+skew tree = tree
 
+
+-- split
 split :: AATree a -> AATree a
-split (Node tn a tv (Node rn b rv x@(Node xn _ _ _)))
-  | tn == xn = Node (rn + 1) (Node tn a tv b) rv x
-split t = t
+split tree@(Node level _ _ (Node _ _ _ (Node v _ _ _)))
+  | v == level = Node (level + 1) left x right
+    where (Node _ left x right) = leftRotate tree
+split tree = tree
+
+
+-- left rotation
+leftRotate :: AATree a -> AATree a
+leftRotate (Node level a p (Node _ b q c)) = Node level (Node level a p b ) q c
+leftRotate Empty = emptyTree
+leftRotate leaf@(Leaf _ _) = leaf
+
+
+-- right rotation
+rightRotate :: AATree a -> AATree a
+rightRotate (Node level (Node _ a p b) q c) = Node level a p (Node level b q c)
+rightRotate Empty = emptyTree
+rightRotate leaf@(Leaf _ _) = leaf
+
 
 -- inorder traversal
 inorder :: AATree a -> [a]
@@ -72,11 +93,13 @@ inorder (Leaf _ a) = [a]
 inorder Empty = []
 inorder (Node _ left a right) = inorder left ++ [a] ++ inorder right
 
+
 -- get size of tree (# nodes != Empty)
 size :: AATree a -> Int
 size Empty = 0
 size (Leaf _ _) = 1
 size (Node _ left _ right) = 1 + (size left) + (size right)
+
 
 -- get height of tree recursively
 height :: AATree a -> Int
@@ -102,12 +125,14 @@ checkTree root =
       | isEmpty x = []
       | otherwise = x:nodes (leftSub x) ++ nodes (rightSub x)
 
+
 -- True if the given list is ordered
 -- zip each element with its successor
 -- then check if x <= y
 -- e.g. [1,2,3,4] => [(1, 2), (2, 3), (3, 4)]
 isSorted :: Ord a => [a] -> Bool
 isSorted xs = and $ zipWith (<=) xs (tail xs)
+
 
 -- Check if the invariant is true for a single AA node
 -- You may want to write this as a conjunction e.g.
@@ -127,9 +152,11 @@ checkLevels Empty = True
 checkLevels (Node _ Empty _ Empty) = True
 checkLevels _ = False
 
+
 -- check if tree is empty
 isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
+
 
 -- get subtrees
 -- we only care about left/right trees hence the wildcards

@@ -42,6 +42,6 @@ buildTree (x:xs) = insert x (buildTree xs)
 
 {- ???????????????
 buildTree' :: Ord a => [a] -> AATree a
-buildTree' = foldl insert emptyTree
+buildTree' list = foldl insert emptyTree list
 -}
 --------------------------------------------------------------------------------
