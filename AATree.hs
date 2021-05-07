@@ -21,12 +21,11 @@ module AATree (
 data AATree a
   = Empty
   | Node  { level :: Int, left :: AATree a, value :: a, right :: AATree a }
-  | Leaf  { level :: Int, value :: a }
   deriving (Eq, Show, Read)
 
 -- test trees
 --at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
-at = Node 0 (Node 1 (Leaf 2 1) 2 Empty) 3 (Leaf 0 4)
+--at = Node 0 (Node 1 (Leaf 2 1) 2 Empty) 3 (Leaf 0 4)
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
 --leaf = Leaf 1
 
@@ -39,9 +38,6 @@ emptyTree = Empty
 -- find an element in the tree
 get :: Ord a => a -> AATree a -> Maybe a
 get _ Empty = Nothing
-get a (Leaf _ x)
-  | a == x = Just x
-  | otherwise = Nothing
 get a (Node _ left y right) = case compare a y of
   LT -> get a left
   EQ -> Just a
@@ -51,13 +47,9 @@ get a (Node _ left y right) = case compare a y of
 -- insert an element
 -- auto balance with skew/split
 insert :: Ord a => a -> AATree a -> AATree a
-insert x Empty = (Leaf 0 x)
+insert x Empty = Node 0 Empty x Empty
 insert x (Node level left y right)
-  | x < y     = balance $ Node level (insert x left) y right
-  | otherwise = balance $ Node level left y (insert x right)
-  where balance = split . skew
-insert x (Leaf level y)
-  | x < y     = balance $ Node level (insert x left) y right
+  | x < y     = balance $ Node level (incLevel (insert x left)) y right
   | otherwise = balance $ Node level left y (insert x right)
   where balance = split . skew
 
@@ -81,19 +73,20 @@ split tree = tree
 leftRotate :: AATree a -> AATree a
 leftRotate (Node level a p (Node _ b q c)) = Node level (Node level a p b ) q c
 leftRotate Empty = emptyTree
-leftRotate leaf@(Leaf _ _) = leaf
 
 
 -- right rotation
 rightRotate :: AATree a -> AATree a
 rightRotate (Node level (Node _ a p b) q c) = Node level a p (Node level b q c)
 rightRotate Empty = emptyTree
-rightRotate leaf@(Leaf _ _) = leaf
+
+-- increment level of a tree
+incLevel :: AATree a -> AATree a
+incLevel (Node level left value right) = Node (level + 1) left value right
 
 
 -- inorder traversal
 inorder :: AATree a -> [a]
-inorder (Leaf _ a) = [a]
 inorder Empty = []
 inorder (Node _ left a right) = inorder left ++ [a] ++ inorder right
 
@@ -101,14 +94,12 @@ inorder (Node _ left a right) = inorder left ++ [a] ++ inorder right
 -- get size of tree (# nodes != Empty)
 size :: AATree a -> Int
 size Empty = 0
-size (Leaf _ _) = 1
 size (Node _ left _ right) = 1 + (size left) + (size right)
 
 
 -- get height of tree recursively
 height :: AATree a -> Int
 height (Node _ left _ right) = 1 + max (height left) (height right)
-height (Leaf _ _) = 1
 height Empty = 0
 
 --------------------------------------------------------------------------------
@@ -151,7 +142,6 @@ checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc 
     leftChildOK = levellc == (level + 1)
     rightChildOK = (levelrc == level) || (levelrc == (level + 1))
     rightGrandchildOK = level >= levelrgc
-checkLevels (Leaf _ _) = True
 checkLevels Empty = True
 checkLevels (Node _ Empty _ Empty) = True
 checkLevels _ = False
@@ -168,11 +158,9 @@ isEmpty a = size a == 0
 -- get left subtree
 leftSub :: AATree a -> AATree a
 leftSub (Node _ left _ _) = left
-leftSub (Leaf _ _) = emptyTree
 
 -- get right subtree
 rightSub :: AATree a -> AATree a
 rightSub (Node _ _ _ right) = right
-rightSub (Leaf _ _) = emptyTree
 
 --------------------------------------------------------------------------------
