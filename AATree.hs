@@ -25,7 +25,9 @@ data AATree a
 
 -- test trees
 --at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
---at = Node 0 (Node 1 (Leaf 2 1) 2 Empty) 3 (Leaf 0 4)
+at1 = Node 1 (Node 2 (Node 3 Empty 1 Empty) 2 Empty) 3 (Node 2 Empty 4 Empty)
+at2 = Node 1 (Node 2 Empty 1 Empty) 2 (Node 2 Empty 3 Empty)
+at3 = Node 1 Empty 1 Empty
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
 --leaf = Leaf 1
 
@@ -174,7 +176,12 @@ checkLevels (Node level (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc 
     leftChildOK = levellc == (level + 1)
     rightChildOK = (levelrc == level) || (levelrc == (level + 1))
     rightGrandchildOK = level > levelrgc
-
+checkLevels _ = True
+{-
+checkLevels (Node _ Empty _ Empty) = True
+checkLevels (Node level1 node@(Node level2 _ _ _) _ Empty) = level1 < level2
+checkLevels (Node level1 Empty _ node@(Node level2 _ _ _)) = level1 < level2
+-}
 
 
 -- check if tree is empty

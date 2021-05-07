@@ -7,6 +7,7 @@
 -}
 
 import AATree
+import Data.Traversable
 
 --------------------------------------------------------------------------------
 
@@ -31,11 +32,14 @@ main = do
   print ("Optimal height: " ++ show optimalHeight)
   print ("Height / Optimal height: " ++ show ratio)
   print ("checkTree: " ++ show checkTreeStatus)
-  print ("First 20 words: " ++ "WEEERDS")
+  print ("First 20 words: " ++ (printFirstn 20 fullTree))
 
 
-  -- use fromIntegral/ceiling/logBase
+-- print the first 20 elements from the list (inorder traversal)
+printFirstn :: Int -> AATree String -> String
+printFirstn n tree = unwords $ take n $ inorder tree
 
+-- build the tree from a list of words
 buildTree :: Ord a => [a] -> AATree a
 buildTree [] = emptyTree
 buildTree (x:xs) = insert x (buildTree xs)
