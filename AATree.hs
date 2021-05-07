@@ -51,8 +51,12 @@ get a (Node _ left y right) = case compare a y of
 -- insert an element
 -- auto balance with skew/split
 insert :: Ord a => a -> AATree a -> AATree a
-insert x Empty = Node 1 Empty x Empty
+insert x Empty = (Leaf 0 x)
 insert x (Node level left y right)
+  | x < y     = balance $ Node level (insert x left) y right
+  | otherwise = balance $ Node level left y (insert x right)
+  where balance = split . skew
+insert x (Leaf level y)
   | x < y     = balance $ Node level (insert x left) y right
   | otherwise = balance $ Node level left y (insert x right)
   where balance = split . skew
@@ -164,9 +168,11 @@ isEmpty a = size a == 0
 -- get left subtree
 leftSub :: AATree a -> AATree a
 leftSub (Node _ left _ _) = left
+leftSub (Leaf _ _) = emptyTree
 
 -- get right subtree
 rightSub :: AATree a -> AATree a
 rightSub (Node _ _ _ right) = right
+rightSub (Leaf _ _) = emptyTree
 
 --------------------------------------------------------------------------------
