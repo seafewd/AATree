@@ -37,5 +37,4 @@ checkTreeFromList list
     fail "bad tree"
   where tree = foldl' (flip insert) emptyTree (tail list)
         tree' = insert (head list) tree
-
 --------------------------------------------------------------------------------

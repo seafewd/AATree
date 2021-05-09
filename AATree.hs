@@ -85,10 +85,10 @@ split t = t
 -- auto balance with skew + split at every node
 insert :: Ord a => a -> AATree a -> AATree a
 insert x Empty = Node 1 Empty x Empty
-insert x (Node level1 l y r)
-  | x < y = balance $ Node level1 (insert x l) y r
-  | x > y = balance $ Node level1 l y (insert x r)
-  | otherwise = (Node level1 l y r)
+insert x (Node level l y r)
+  | x < y = balance $ Node level (insert x l) y r
+  | x > y = balance $ Node level l y (insert x r)
+  | otherwise = Node level l y r
   where balance = split . skew
 
 -- skew
@@ -109,14 +109,14 @@ split tree = tree
 
 -- left rotation
 rotateLeft :: AATree a -> AATree a
-rotateLeft (Node plevel lc@(Node lclevel _ _ _) pval (Node _ rclc rcval rcrc)) = Node plevel (Node lclevel lc pval rclc) rcval rcrc
+rotateLeft (Node plevel lc@(Node lclevel _ _ _) pval (Node rclevel rclc rcval rcrc)) = Node rclevel (Node lclevel lc pval rclc) rcval rcrc
 rotateLeft Empty = emptyTree
 rotateLeft node@(Node _ Empty _ Empty) = node
 rotateLeft tree = tree
 
 -- right rotation
 rotateRight :: AATree a -> AATree a
-rotateRight (Node plevel (Node _ lclc lcval lcrc) pval rc) = Node plevel lclc lcval (Node plevel lcrc pval rc)
+rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc) = Node lclevel lclc lcval (Node plevel lcrc pval rc)
 rotateRight Empty = emptyTree
 rotateRight node@(Node _ Empty _ Empty) = node
 rotateRight tree = tree
