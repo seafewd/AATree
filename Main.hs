@@ -26,7 +26,6 @@ main = do
   let ratio = (fromIntegral treeHeight) / (fromIntegral optimalHeight)
   let checkTreeStatus = checkTree fullTree
 
-
   print ("Size: " ++ show treeSize)
   print ("Height: " ++ show treeHeight)
   print ("Optimal height: " ++ show optimalHeight)
@@ -46,9 +45,9 @@ buildTree [] = emptyTree
 buildTree (x:xs) = insert x (buildTree xs)
 ---}
 
---{- ???????????????
+--{-
 buildTree :: Ord a => [a] -> AATree a
 buildTree [] = emptyTree
 buildTree list = foldl (flip insert) emptyTree (tail list)
----}
+--}
 --------------------------------------------------------------------------------

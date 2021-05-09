@@ -26,6 +26,7 @@ data AATree a
 -- test trees
 --at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
 --at1 = Node 1 (Node 2 (Node 3 Empty 1 Empty) 2 Empty) 3 (Node 2 Empty 4 Empty)
+--at = Node 1 (Node 2 Empty 2 Empty) 3 (Node 2 Empty 4 Empty)
 --at2 = Node 1 (Node 2 emptyTree 1 emptyTree) 2 (Node 2 emptyTree 3 emptyTree)
 --at3 = Node 1 Empty 1 Empty
 --atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
