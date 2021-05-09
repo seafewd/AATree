@@ -45,7 +45,7 @@ get a (Node _ l y r) = case compare a y of
   EQ -> Just a
   GT -> get a r
 
---{-
+{-
 -- insert an element
 -- auto balance with skew + split at every node
 insert :: Ord a => a -> AATree a -> AATree a
@@ -58,7 +58,7 @@ insert x (Node lv l y r) = case compare x y of
 (.$) :: a -> (a -> b) -> b
 (.$) = flip ($)
 
-{-
+
 -- | right rotation
 skew :: AATree a -> AATree a
 skew t@(Node lvT l@(Node lvL _ _ _) _ _)
@@ -68,6 +68,7 @@ skew t@(Node lvT l@(Node lvL _ _ _) _ _)
   | otherwise = t
 skew t = t
 
+
 -- | left rotation and level increase
 split :: AATree a -> AATree a
 split t@(Node lvT _ _ r@(Node lvR _ _ (Node lvX _ _ _)))
@@ -76,9 +77,9 @@ split t@(Node lvT _ _ r@(Node lvR _ _ (Node lvX _ _ _)))
                  in r'
   | otherwise = t
 split t = t
----}
+-}
 
-{-
+
 -- insert an element
 -- auto balance with skew + split at every node
 insert :: Ord a => a -> AATree a -> AATree a
@@ -86,39 +87,38 @@ insert x Empty = Node 1 Empty x Empty
 insert x (Node level1 l y r)
   | x < y = balance $ Node level1 (insert x l) y r
   | x > y = balance $ Node level1 l y (insert x r)
+  | otherwise = (Node level1 l y r)
   where balance = split . skew
--}
 
 -- skew
+-- rotate right if root level is the same as the level of its left child
 skew :: AATree a -> AATree a
-skew tree@(Node l1 (Node l2 _ _ _) _ _)
-  | l2 == l1 = rightRotate tree
+skew tree@(Node plvl (Node lclvl _ _ _) _ _)
+  | plvl == lclvl = rotateRight tree
 skew tree = tree
 
 
 -- split
+-- rotate left if root level is the same as its right grandchild's level
 split :: AATree a -> AATree a
-split tree@(Node level1 _ _ (Node _ _ _ (Node v _ _ _)))
-  | v == level1 = Node (level1 + 1) l x r
-    where (Node _ l x r) = leftRotate tree
+split tree@(Node plvl _ _ (Node _ _ _ (Node rgclvl _ _ _)))
+  | plvl == rgclvl = rotateLeft tree
 split tree = tree
 
 
 -- left rotation
-leftRotate :: AATree a -> AATree a
-leftRotate (Node level1 a p (Node _ b q c)) = Node level1 (Node level1 a p b) q c
-leftRotate Empty = emptyTree
-leftRotate (Node _ Empty _ Empty) = emptyTree
-leftRotate (Node lv1 lnode@(Node _ _ _ _) v1 Empty) = (Node lv1 Empty v1 lnode)
-
+rotateLeft :: AATree a -> AATree a
+rotateLeft (Node plevel lc@(Node lclevel _ _ _) pval (Node _ rclc rcval rcrc)) = Node plevel (Node lclevel lc pval rclc) rcval rcrc
+rotateLeft Empty = emptyTree
+rotateLeft node@(Node _ Empty _ Empty) = node
+rotateLeft tree = tree
 
 -- right rotation
-rightRotate :: AATree a -> AATree a
-rightRotate (Node level1 (Node _ a p b) q c) = Node level1 a p (Node level1 b q c)
-rightRotate Empty = emptyTree
-rightRotate (Node _ Empty _ Empty) = emptyTree
-rightRotate (Node lv1 Empty v1 rnode@(Node _ _ _ _)) = (Node lv1 rnode v1 Empty)
-
+rotateRight :: AATree a -> AATree a
+rotateRight (Node plevel (Node _ lclc lcval lcrc) pval rc) = Node plevel lclc lcval (Node plevel lcrc pval rc)
+rotateRight Empty = emptyTree
+rotateRight node@(Node _ Empty _ Empty) = node
+rotateRight tree = tree
 
 -- inorder traversal
 inorder :: AATree a -> [a]

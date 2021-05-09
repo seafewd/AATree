@@ -39,13 +39,16 @@ main = do
 printFirstn :: Int -> AATree String -> String
 printFirstn n tree = unwords $ take n $ inorder tree
 
+{--
 -- build the tree from a list of words
 buildTree :: Ord a => [a] -> AATree a
 buildTree [] = emptyTree
 buildTree (x:xs) = insert x (buildTree xs)
+---}
 
-{- ???????????????
-buildTree' :: Ord a => [a] -> AATree a
-buildTree' list = foldl insert list emptyTree
--}
+--{- ???????????????
+buildTree :: Ord a => [a] -> AATree a
+buildTree [] = emptyTree
+buildTree list = foldl (flip insert) emptyTree (tail list)
+---}
 --------------------------------------------------------------------------------
