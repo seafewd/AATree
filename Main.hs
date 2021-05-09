@@ -33,17 +33,7 @@ main = do
   print ("Height / Optimal height: " ++ show ratio)
   print ("checkTree: " ++ show checkTreeStatus)
   print ("First 20 words: " ++ (printFirstn 20 fullTree))
-  --checkTreeFromList list
 
-{-
-checkTreeFromList list
-  | checkTree tree' && inorder tree' == sort list = do
-    putStrLn ("\nInvariant not true after inserting\n  " ++ show (head list) ++
-              "\ninto\n  " ++ show tree ++
-              "\nresulting tree was\n  " ++ show tree')
-  where tree = foldl' (flip insert) emptyTree (tail list)
-        tree' = insert (head list) tree
--}
 
 -- print the first 20 elements from the list (inorder traversal)
 printFirstn :: Int -> AATree String -> String

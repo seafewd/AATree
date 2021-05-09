@@ -23,15 +23,6 @@ data AATree a
   | Node  { level :: Int, left :: AATree a, value :: a, right :: AATree a }
   deriving (Eq, Show, Read)
 
--- test trees
---at = Node 0 (Node 1 (Leaf 2 4) 3 (Empty)) 1 (Leaf 0 2)
---at1 = Node 1 (Node 2 (Node 3 Empty 1 Empty) 2 Empty) 3 (Node 2 Empty 4 Empty)
---at = Node 1 (Node 2 Empty 2 Empty) 3 (Node 2 Empty 4 Empty)
---at2 = Node 1 (Node 2 emptyTree 1 emptyTree) 2 (Node 2 emptyTree 3 emptyTree)
---at3 = Node 1 Empty 1 Empty
---atbig = (Node (Node (Leaf 1) 3 (Leaf 4)) 5 (Node (Node (Empty) 6 (Leaf 7)) 9 (Leaf 11)))
---leaf = Leaf 1
-
 
 -- return an empty tree
 emptyTree :: AATree a
@@ -46,50 +37,17 @@ get a (Node _ l y r) = case compare a y of
   EQ -> Just a
   GT -> get a r
 
-{-
--- insert an element
--- auto balance with skew + split at every node
-insert :: Ord a => a -> AATree a -> AATree a
-insert x Empty = Node 1 Empty x Empty
-insert x (Node lv l y r) = case compare x y of
-   LT -> Node lv (insert x l) y r .$ skew .$ split
-   GT -> Node lv l y (insert x r) .$ skew .$ split
-   EQ -> Node lv l y r
-
-(.$) :: a -> (a -> b) -> b
-(.$) = flip ($)
-
-
--- | right rotation
-skew :: AATree a -> AATree a
-skew t@(Node lvT l@(Node lvL _ _ _) _ _)
-  | lvT == lvL = let t' = t {left = right l}
-                     l' = l {right = t'}
-                 in l'
-  | otherwise = t
-skew t = t
-
-
--- | left rotation and level increase
-split :: AATree a -> AATree a
-split t@(Node lvT _ _ r@(Node lvR _ _ (Node lvX _ _ _)))
-  | lvT == lvX = let t' = t {right = left r}
-                     r' = r {left = t', level = lvR + 1}
-                 in r'
-  | otherwise = t
-split t = t
--}
-
 
 -- insert an element
 -- auto balance with skew + split at every node
 insert :: Ord a => a -> AATree a -> AATree a
 insert x Empty = Node 1 Empty x Empty
-insert x (Node level l y r)
-  | x < y = balance $ Node level (insert x l) y r
-  | x > y = balance $ Node level l y (insert x r)
-  | otherwise = Node level l y r
+insert x (Node lvl l y r)
+  | x < y = balance $ Node lvl (insert x l) y r
+  | x > y = balance $ Node lvl l y (insert x r)
+  | otherwise = Node lvl l y r
   where balance = split . skew
+
 
 -- skew
 -- rotate right if root level is the same as the level of its left child
@@ -103,23 +61,24 @@ skew tree = tree
 -- rotate left if root level is the same as its right grandchild's level
 split :: AATree a -> AATree a
 split tree@(Node plvl _ _ (Node _ _ _ (Node rgclvl _ _ _)))
-  | plvl == rgclvl = rotateLeft tree
+  | rgclvl == plvl = rotateLeft tree
 split tree = tree
 
 
 -- left rotation
 rotateLeft :: AATree a -> AATree a
-rotateLeft (Node plevel lc@(Node lclevel _ _ _) pval (Node rclevel rclc rcval rcrc)) = Node rclevel (Node lclevel lc pval rclc) rcval rcrc
-rotateLeft Empty = emptyTree
-rotateLeft node@(Node _ Empty _ Empty) = node
+rotateLeft (Node plevel lc pval (Node _ rclc rcval rcrc)) = Node (plevel + 1) (Node plevel lc pval rclc) rcval rcrc
 rotateLeft tree = tree
+
 
 -- right rotation
 rotateRight :: AATree a -> AATree a
-rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc) = Node lclevel lclc lcval (Node plevel lcrc pval rc)
+rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc)
+  = Node lclevel lclc lcval (Node plevel lcrc pval rc)
 rotateRight Empty = emptyTree
 rotateRight node@(Node _ Empty _ Empty) = node
 rotateRight tree = tree
+
 
 -- inorder traversal
 inorder :: AATree a -> [a]
@@ -146,7 +105,6 @@ remove = error "remove not implemented"
 
 --------------------------------------------------------------------------------
 -- Check that an AA tree is ordered and obeys the AA invariants
-
 checkTree :: Ord a => AATree a -> Bool
 checkTree root =
   isSorted (inorder root) &&
@@ -182,11 +140,7 @@ checkLevels (Node level1 (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc
     rightChildOK = (levelrc <= level1)
     rightGrandchildOK = level1 < levelrgc
 checkLevels _ = True
-{-
-checkLevels (Node _ Empty _ Empty) = True
-checkLevels (Node level1 node@(Node level2 _ _ _) _ Empty) = level1 < level2
-checkLevels (Node level1 Empty _ node@(Node level2 _ _ _)) = level1 < level2
--}
+
 
 -- check if tree is empty
 isEmpty :: AATree a -> Bool
