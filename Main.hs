@@ -20,13 +20,15 @@ main = do
   let list = words contents
   -- build an AA tree using the list
   let fullTree = buildTree list
-  -- calculate and print statistics
+
+  -- calculate statistics
   let treeSize = size fullTree
   let treeHeight = height fullTree
   let optimalHeight = ((ceiling . logBase 2.0 . fromIntegral) (treeSize + 1)) - 1
   let ratio = (fromIntegral treeHeight) / (fromIntegral optimalHeight)
   let checkTreeStatus = checkTree fullTree
 
+  -- print statistics
   print ("Size: " ++ show treeSize)
   print ("Height: " ++ show treeHeight)
   print ("Optimal height: " ++ show optimalHeight)
@@ -39,16 +41,9 @@ main = do
 printFirstn :: Int -> AATree String -> String
 printFirstn n tree = unwords $ take n $ inorder tree
 
-{--
--- build the tree from a list of words
-buildTree :: Ord a => [a] -> AATree a
-buildTree [] = emptyTree
-buildTree (x:xs) = insert x (buildTree xs)
----}
 
---{-
+-- build a tree from a list
 buildTree :: Ord a => [a] -> AATree a
 buildTree [] = emptyTree
 buildTree list = foldl (flip insert) emptyTree (tail list)
---}
 --------------------------------------------------------------------------------

@@ -75,8 +75,7 @@ rotateLeft tree = tree
 rotateRight :: AATree a -> AATree a
 rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc)
   = Node lclevel lclc lcval (Node plevel lcrc pval rc)
-rotateRight Empty = emptyTree
-rotateRight node@(Node _ Empty _ Empty) = node
+rotateRight p@(Node plevel Empty pval _) = Node plevel Empty pval p
 rotateRight tree = tree
 
 
@@ -136,9 +135,9 @@ checkLevels (Node level1 (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc
   rightChildOK &&
   rightGrandchildOK
   where
-    leftChildOK = levellc == (level1 - 1)
+    leftChildOK = levellc < level1
     rightChildOK = (levelrc <= level1)
-    rightGrandchildOK = level1 < levelrgc
+    rightGrandchildOK = level1 > levelrgc
 checkLevels _ = True
 
 
