@@ -75,7 +75,6 @@ rotateLeft tree = tree
 rotateRight :: AATree a -> AATree a
 rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc)
   = Node lclevel lclc lcval (Node plevel lcrc pval rc)
-rotateRight p@(Node plevel Empty pval _) = Node plevel Empty pval p
 rotateRight tree = tree
 
 
@@ -146,9 +145,6 @@ isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
 
 
--- get subtrees
--- we only care about left/right trees hence the wildcards
---
 -- get left subtree
 leftSub :: AATree a -> AATree a
 leftSub = left
