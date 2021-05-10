@@ -43,6 +43,8 @@ printFirstn n tree = unwords $ take n $ inorder tree
 
 
 -- build a tree from a list
+-- O(n log n) since we insert every element in the list
+-- and split + skew at every node
 buildTree :: Ord a => [a] -> AATree a
 buildTree [] = emptyTree
 buildTree list = foldl (flip insert) emptyTree (tail list)

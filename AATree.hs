@@ -25,11 +25,13 @@ data AATree a
 
 
 -- return an empty tree
+-- O(1)
 emptyTree :: AATree a
 emptyTree = Empty
 
 
 -- find an element in the tree
+-- O(log n) worst case since we might have traverse entire tree
 get :: Ord a => a -> AATree a -> Maybe a
 get _ Empty = Nothing
 get a (Node _ l y r) = case compare a y of
@@ -40,6 +42,12 @@ get a (Node _ l y r) = case compare a y of
 
 -- insert an element
 -- auto balance with skew + split at every node
+-- O(1) for insert itself since we just make an assignment
+-- but the function calls itself recursively and does a skew
+-- and a split for each node
+-- Total worst case time
+-- O(log n)^2 - in the worst case we have to traverse
+-- the entire tree and do rotations at each level
 insert :: Ord a => a -> AATree a -> AATree a
 insert x Empty = Node 1 Empty x Empty
 insert x (Node lvl l y r)
@@ -51,6 +59,7 @@ insert x (Node lvl l y r)
 
 -- skew
 -- rotate right if root level is the same as the level of its left child
+-- O(log n) - worst case we skew through entire tree
 skew :: AATree a -> AATree a
 skew tree@(Node plvl (Node lclvl _ _ _) _ _)
   | plvl == lclvl = rotateRight tree
@@ -59,6 +68,7 @@ skew tree = tree
 
 -- split
 -- rotate left if root level is the same as its right grandchild's level
+-- O(log n) - worst case we split through entire tree
 split :: AATree a -> AATree a
 split tree@(Node plvl _ _ (Node _ _ _ (Node rgclvl _ _ _)))
   | rgclvl == plvl = rotateLeft tree
@@ -66,12 +76,14 @@ split tree = tree
 
 
 -- left rotation
+-- O(1) - we're just changing a few pointers
 rotateLeft :: AATree a -> AATree a
 rotateLeft (Node plevel lc pval (Node _ rclc rcval rcrc)) = Node (plevel + 1) (Node plevel lc pval rclc) rcval rcrc
 rotateLeft tree = tree
 
 
 -- right rotation
+-- O(1)
 rotateRight :: AATree a -> AATree a
 rotateRight (Node plevel (Node lclevel lclc lcval lcrc) pval rc)
   = Node lclevel lclc lcval (Node plevel lcrc pval rc)
@@ -79,18 +91,21 @@ rotateRight tree = tree
 
 
 -- inorder traversal
+-- O(log n)
 inorder :: AATree a -> [a]
 inorder Empty = []
 inorder (Node _ l a r) = inorder l ++ [a] ++ inorder r
 
 
 -- get size of tree (# nodes != Empty)
+--O(log n)
 size :: AATree a -> Int
 size Empty = 0
 size (Node _ l _ r) = 1 + (size l) + (size r)
 
 
 -- get height of tree recursively
+--O(log n)
 height :: AATree a -> Int
 height (Node _ l _ r) = 1 + max (height l) (height r)
 height Empty = 0
@@ -117,6 +132,7 @@ checkTree root =
 -- zip each element with its successor
 -- then check if x <= y
 -- e.g. [1,2,3,4] => [(1, 2), (2, 3), (3, 4)]
+--O(n) since we go through each element
 isSorted :: Ord a => [a] -> Bool
 isSorted xs = and $ zipWith (<=) xs (tail xs)
 
@@ -128,6 +144,7 @@ isSorted xs = and $ zipWith (<=) xs (tail xs)
 --     rightChildOK node &&
 --     rightGrandchildOK node
 -- where each conjunct checks one aspect of the invariant
+-- O(1) since we just check conditions
 checkLevels :: AATree a -> Bool
 checkLevels (Node level1 (Node levellc _ _ _) _ (Node levelrc _ _ (Node levelrgc _ _ _))) =
   leftChildOK &&
@@ -141,15 +158,18 @@ checkLevels _ = True
 
 
 -- check if tree is empty
+-- O(1)
 isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
 
 
 -- get left subtree
+--O(1)
 leftSub :: AATree a -> AATree a
 leftSub = left
 
 -- get right subtree
+--O(1)
 rightSub :: AATree a -> AATree a
 rightSub = right
 
