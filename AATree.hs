@@ -31,7 +31,7 @@ emptyTree = Empty
 
 
 -- find an element in the tree
--- O(log n) worst case since we might have traverse entire tree
+-- O(log n) worst case since we might have to traverse entire tree
 get :: Ord a => a -> AATree a -> Maybe a
 get _ Empty = Nothing
 get a (Node _ l y r) = case compare a y of
@@ -45,8 +45,7 @@ get a (Node _ l y r) = case compare a y of
 -- O(1) for insert itself since we just make an assignment
 -- but the function calls itself recursively and does a skew
 -- and a split for each node
--- Total worst case time
--- O(log n)^2 - in the worst case we have to traverse
+-- O(log n) - in the worst case we have to traverse
 -- the entire tree and do rotations at each level
 insert :: Ord a => a -> AATree a -> AATree a
 insert x Empty = Node 1 Empty x Empty
@@ -91,21 +90,21 @@ rotateRight tree = tree
 
 
 -- inorder traversal
--- O(log n)
+-- O(n) - traverse the entire tree
 inorder :: AATree a -> [a]
 inorder Empty = []
 inorder (Node _ l a r) = inorder l ++ [a] ++ inorder r
 
 
 -- get size of tree (# nodes != Empty)
---O(log n)
+--O(n)
 size :: AATree a -> Int
 size Empty = 0
 size (Node _ l _ r) = 1 + (size l) + (size r)
 
 
 -- get height of tree recursively
---O(log n)
+--O(n)
 height :: AATree a -> Int
 height (Node _ l _ r) = 1 + max (height l) (height r)
 height Empty = 0
@@ -118,6 +117,7 @@ remove = error "remove not implemented"
 
 --------------------------------------------------------------------------------
 -- Check that an AA tree is ordered and obeys the AA invariants
+-- O(n) since checkLevels is O(1) but isSorted is O(n)
 checkTree :: Ord a => AATree a -> Bool
 checkTree root =
   isSorted (inorder root) &&
@@ -158,13 +158,13 @@ checkLevels _ = True
 
 
 -- check if tree is empty
--- O(1)
+-- O(n) since O(size(n)) == O(n)
 isEmpty :: AATree a -> Bool
 isEmpty a = size a == 0
 
 
 -- get left subtree
---O(1)
+--O(1) - just get a pointer
 leftSub :: AATree a -> AATree a
 leftSub = left
 
